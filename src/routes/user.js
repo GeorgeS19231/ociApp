@@ -49,7 +49,7 @@ userRouter.patch('/users/update-info', auth, async (req, res) => {
 });
 
 
-userRouter.post('/users/logout', auth, async(req, res) => {
+userRouter.post('/users/logout', auth, async (req, res) => {
     // Logout logic here
     res.send('User logged out');
 });
