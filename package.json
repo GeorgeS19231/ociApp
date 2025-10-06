@@ -1,0 +1,29 @@
+{
+  "name": "oci",
+  "version": "1.0.0",
+  "description": "oci be structure",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js --watch src ",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/GeorgeS19231/ociApp.git"
+  },
+  "keywords": [
+    "oci",
+    "app"
+  ],
+  "author": "Sfetcu George",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GeorgeS19231/ociApp/issues"
+  },
+  "homepage": "https://github.com/GeorgeS19231/ociApp#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
