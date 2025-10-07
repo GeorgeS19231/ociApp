@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 
+console.log(`Environment: ${process.env.MONGODB_URL}`);
 try {
   await mongoose.connect(process.env.MONGODB_URL);
   console.log("Connected to the database");

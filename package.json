@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js --watch src ",
+    "dev": "env-cmd --file=./config/dev.env nodemon src/index.js --watch src ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,7 +25,7 @@
   "homepage": "https://github.com/GeorgeS19231/ociApp#readme",
   "dependencies": {
     "bcryptjs": "^3.0.2",
-    "dotenv": "^17.2.3",
+    "env-cmd": "^11.0.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.0",
