@@ -62,6 +62,10 @@ export const userSchema = new mongoose.Schema({
         expiresAt: {
             type: Date,
             required: true
+        },
+        sessionId: {
+            type: String,
+            required: true
         }
     }],
 
@@ -73,12 +77,20 @@ export const userSchema = new mongoose.Schema({
         expiresAt: {
             type: Date,
             required: true
+        },
+        sessionId: {
+            type: String,
+            required: true
         }
     }],
 
     isVerified: {
         type: Boolean,
         default: false
+    },
+
+    verificationCode: {
+        type: String
     },
 
     verificationToken: {
@@ -107,25 +119,38 @@ export const userSchema = new mongoose.Schema({
 
 // Generate both access and refresh tokens
 userSchema.methods.generateAuthTokens = async function () {
+    // Generate unique session ID to link access token with refresh token
+    const sessionId = new mongoose.Types.ObjectId().toString();
+
     const accessToken = jwt.sign(
-        { _id: this._id.toString() },
+        { _id: this._id.toString(), sessionId },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' }  // 1 hour for access token
+        {
+            expiresIn: '1h',
+            issuer: process.env.JWT_ISSUER,
+            audience: process.env.JWT_AUDIENCE
+        }
     );
 
     const refreshToken = jwt.sign(
-        { _id: this._id.toString(), type: 'refresh' },
-        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,  // Fallback to same secret if not set
-        { expiresIn: '7d' }  // 7 days for refresh token
+        { _id: this._id.toString(), type: 'refresh', sessionId },
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        {
+            expiresIn: '7d',
+            issuer: process.env.JWT_ISSUER,
+            audience: process.env.JWT_AUDIENCE
+        }
     );
 
-    this.tokens.push({ 
+    this.tokens.push({
         token: accessToken,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000)  // 1 hour
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),  // 1 hour
+        sessionId
     });
     this.refreshTokens.push({
         token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)  // 7 days
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),  // 7 days
+        sessionId
     });
 
     await this.save();
@@ -150,15 +175,15 @@ userSchema.statics.findByCredentials = async (email, password) => {
 };
 
 // Clean up expired tokens
-userSchema.methods.cleanupExpiredTokens = async function() {
+userSchema.methods.cleanupExpiredTokens = async function () {
     const now = new Date();
-    
+
     // Remove expired access tokens
     this.tokens = this.tokens.filter(t => t.expiresAt > now);
-    
+
     // Remove expired refresh tokens
     this.refreshTokens = this.refreshTokens.filter(rt => rt.expiresAt > now);
-    
+
     await this.save();
 };
 
@@ -169,6 +194,12 @@ userSchema.pre('save', async function (next) {
         this.tokens = [];
         this.refreshTokens = [];
     }
+    next();
+});
+
+userSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+    const user = this;
+    // TODO: Add any cascading deletes for related to user model here
     next();
 });
 
