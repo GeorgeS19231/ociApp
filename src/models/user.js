@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { isAtLeast16 } from "../validators/age_validation.js";
+import { customAlphabet } from "nanoid";
 
 export const userSchema = new mongoose.Schema({
     firstName: {
@@ -37,14 +39,20 @@ export const userSchema = new mongoose.Schema({
             }
         }
     },
-    age: {
-        type: Number,
-        default: 0,
-        validate(value) {
-            if (value < 0) {
-                throw new Error('Age must be a positive number');
+    dob: {
+        type: Date,
+        required: true,
+
+        validator(value) {
+            if (validator.isDate(value) && value >= new Date() && !isAtLeast16(dateOfBirth)) {
+                throw new Error('Date of birth must be in the past and be at least 16 years');
             }
         }
+    },
+    sex: {
+        type: String,
+        enum: ['male', 'female', 'other'],
+        required: true
     },
     profilePicture: {
         type: String,
@@ -89,13 +97,20 @@ export const userSchema = new mongoose.Schema({
         default: false
     },
 
-    verificationCode: {
-        type: String
-    },
-
-    verificationToken: {
-        type: String
-    }
+    verificationToken: [{
+        token: {
+            type: String,
+            required: true
+        },
+        expiresAt: {
+            type: Date,
+            required: true
+        },
+        failedAttempts: {
+            type: Number,
+            default: 0
+        }
+    }]
 }, {
     timestamps: true,
     toJSON: {
@@ -103,6 +118,8 @@ export const userSchema = new mongoose.Schema({
             delete ret.password;
             delete ret.tokens;
             delete ret.refreshTokens;
+            delete ret.isVerified;
+            delete ret.verificationToken;
             return ret;
         }
     },
@@ -112,10 +129,26 @@ export const userSchema = new mongoose.Schema({
             delete ret.tokens;
             delete ret.refreshTokens;
             delete ret.avatar;
+            delete ret.isVerified;
+            delete ret.verificationToken;
             return ret;
         },
     }
 });
+
+userSchema.methods.generateVerificationToken = async function () {
+    // Generate random number of 5 characters based on given ones 
+    const randomVerificationCode = customAlphabet('12345670', 5);
+    // We'll hash the generated one for an extra security layer
+    const encryptedCode = await bcrypt.hash(`${this._id}:${randomVerificationCode}:${process.env.OTP_PEPPER}`, 8);
+    this.verificationToken.push({
+        token: encryptedCode,
+        expiresAt: '1h'
+    });
+    await this.save();
+    return { randomVerificationCode };
+
+}
 
 // Generate both access and refresh tokens
 userSchema.methods.generateAuthTokens = async function () {
@@ -165,7 +198,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
         throw new Error('Unable to login');
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = bcrypt.compare(password, user.password);
 
     if (!isMatch) {
         throw new Error('Unable to login');

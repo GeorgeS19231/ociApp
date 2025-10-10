@@ -2,6 +2,8 @@ import express from 'express';
 import { User } from '../models/user.js';
 import { auth } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
+import { sendActivationCodeToNewUser } from '../email/account_welcome.js';
+import { checkAccountActivation } from '../middleware/account_activation.js';
 
 export const userRouter = express.Router();
 
@@ -14,27 +16,33 @@ userRouter.get('/users/me', auth, async (req, res) => {
 userRouter.post('/users/register', async (req, res) => {
     try {
         const user = new User(req.body);
-        await user.save();
-        const { accessToken, refreshToken } = await user.generateAuthTokens();
-
-        res.status(201).send({ user, accessToken, refreshToken });
+        const verificationToken = await user.generateVerificationToken();
+        sendActivationCodeToNewUser(user.firstName, user.email, verificationToken);
+        res.status(201).send('User created');
     } catch (error) {
         res.status(400).send({ error: error.message });
     }
 });
 
-userRouter.post('/users/verify-email', async (req, res) => {
-    // Email verification logic here
-    res.send('Email verified');
+userRouter.post('/users/verify-email', checkAccountActivation, async (req, res) => {
+    try {
+        if (!req.verificationSuccess) {
+            res.status(403).send(`User's validation token was deleted`);
+        } else {
+            res.status(200).send('Account successfuly activated')
+        }
+
+    } catch (error) {
+        res.status(400).send({ error: error.message });
+    }
+
 });
 
-userRouter.post('/users/login', async (req, res) => {
+userRouter.post('/users/login', auth, async (req, res) => {
     try {
-        const user = await User.findByCredentials(req.body.email, req.body.password);
+        const { accessToken, refreshToken } = await req.user.generateAuthTokens();
 
-        const { accessToken, refreshToken } = await user.generateAuthTokens();
-
-        res.send({ user, accessToken, refreshToken });
+        res.json({ user: req.user, accessToken, refreshToken });
     } catch (error) {
         res.status(400).send({ error: 'Unable to login' });
     }
@@ -50,7 +58,7 @@ userRouter.post('/users/refresh-token', async (req, res) => {
 
         // Verify the refresh token
         const decoded = jwt.verify(
-            refreshToken, 
+            refreshToken,
             process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
             {
                 issuer: process.env.JWT_ISSUER,
@@ -111,8 +119,12 @@ userRouter.post('/users/reset-password', async (req, res) => {
     res.send('Password has been reset');
 });
 
-userRouter.post('/users/resend-verification', async (req, res) => {
-    // Resend verification email logic here
+userRouter.post('/users/send-verification', async (req, res) => {
+    try {
+
+    } catch (e) {
+        return res.status(400).send({ error: e.message });
+    }
     res.send('Verification email resent');
 });
 

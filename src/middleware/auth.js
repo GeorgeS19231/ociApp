@@ -11,12 +11,15 @@ export const auth = async (req, res, next) => {
     });
 
     const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
-   
+
     if (user) {
-        req.user = user;
-        req.token = token;
-        req.sessionId = decoded.sessionId;  // Include sessionId in request for potential use
-      next(); 
+      if (user.verificationToken && !user.isVerified) {
+        throw new Error('Please verify your email before logging in.');
+      }
+      req.user = user;
+      req.token = token;
+      req.sessionId = decoded.sessionId;  // Include sessionId in request for potential use
+      next();
     } else {
       throw new Error('Invalid token');
     }
@@ -31,11 +34,11 @@ export const auth = async (req, res, next) => {
           // Remove expired token and its corresponding refresh token by sessionId
           await User.updateOne(
             { _id: decoded._id },
-            { 
-              $pull: { 
+            {
+              $pull: {
                 tokens: { token: token },
                 refreshTokens: { sessionId: decoded.sessionId }
-              } 
+              }
             }
           );
         }
@@ -43,7 +46,7 @@ export const auth = async (req, res, next) => {
         // Cleanup failed, but that's ok, continue with auth error
       }
     }
-    
+
     res.status(401).send({ error: 'Please authenticate.' });
   }
 };
