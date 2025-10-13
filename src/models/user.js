@@ -138,12 +138,13 @@ export const userSchema = new mongoose.Schema({
 
 userSchema.methods.generateVerificationToken = async function () {
     // Generate random number of 5 characters based on given ones 
-    const randomVerificationCode = customAlphabet('12345670', 5);
+    const nanoid = customAlphabet('12345670', 5);
+    const randomVerificationCode = nanoid();
     // We'll hash the generated one for an extra security layer
     const encryptedCode = await bcrypt.hash(`${this._id}:${randomVerificationCode}:${process.env.OTP_PEPPER}`, 8);
     this.verificationToken.push({
         token: encryptedCode,
-        expiresAt: '1h'
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000)  // 1 hour
     });
     await this.save();
     return { randomVerificationCode };
@@ -198,7 +199,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
         throw new Error('Unable to login');
     }
 
-    const isMatch = bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
         throw new Error('Unable to login');

@@ -2,29 +2,29 @@ import express from 'express';
 import { User } from '../models/user.js';
 import { auth } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
-import { sendActivationCodeToNewUser } from '../email/account_welcome.js';
+import { sendActivationCodeToNewUser, sendByebyeEmail } from '../email/account_welcome_sendgrid.js';
 import { checkAccountActivation } from '../middleware/account_activation.js';
 
 export const userRouter = express.Router();
 
 
-userRouter.get('/users/me', auth, async (req, res) => {
+userRouter.get('/user/me', auth, async (req, res) => {
     // Assuming `auth` middleware sets req.user
     res.json(req.user);
 });
 
-userRouter.post('/users/register', async (req, res) => {
+userRouter.post('/user/register', async (req, res) => {
     try {
         const user = new User(req.body);
-        const verificationToken = await user.generateVerificationToken();
-        sendActivationCodeToNewUser(user.firstName, user.email, verificationToken);
+        const { randomVerificationCode } = await user.generateVerificationToken();
+        sendActivationCodeToNewUser(user.firstName, user.email, randomVerificationCode);
         res.status(201).send('User created');
     } catch (error) {
         res.status(400).send({ error: error.message });
     }
 });
 
-userRouter.post('/users/verify-email', checkAccountActivation, async (req, res) => {
+userRouter.post('/user/verify-email', checkAccountActivation, async (req, res) => {
     try {
         if (!req.verificationSuccess) {
             res.status(403).send(`User's validation token was deleted`);
@@ -38,17 +38,29 @@ userRouter.post('/users/verify-email', checkAccountActivation, async (req, res) 
 
 });
 
-userRouter.post('/users/login', auth, async (req, res) => {
+userRouter.post('/user/login', async (req, res) => {
     try {
-        const { accessToken, refreshToken } = await req.user.generateAuthTokens();
+        const { email, password } = req.body;
 
-        res.json({ user: req.user, accessToken, refreshToken });
+        // Find user by credentials
+        const user = await User.findByCredentials(email, password);
+
+        // Check if user is verified
+        if (!user.isVerified) {
+            return res.status(403).send({ error: 'Please verify your email before logging in.' });
+        }
+
+        // Generate tokens
+        const { accessToken, refreshToken } = await user.generateAuthTokens();
+
+        res.json({ user, accessToken, refreshToken });
     } catch (error) {
+        console.log(error);
         res.status(400).send({ error: 'Unable to login' });
     }
 });
 
-userRouter.post('/users/refresh-token', async (req, res) => {
+userRouter.post('/user/refresh-token', async (req, res) => {
     try {
         const { refreshToken } = req.body;
 
@@ -109,17 +121,17 @@ userRouter.post('/users/refresh-token', async (req, res) => {
     }
 });
 
-userRouter.post('/users/forgot-password', async (req, res) => {
+userRouter.post('/user/forgot-password', async (req, res) => {
     // Password reset logic here
     res.send('Password reset link sent');
 });
 
-userRouter.post('/users/reset-password', async (req, res) => {
+userRouter.post('/user/reset-password', async (req, res) => {
     // Password update logic here
     res.send('Password has been reset');
 });
 
-userRouter.post('/users/send-verification', async (req, res) => {
+userRouter.post('/user/send-verification', async (req, res) => {
     try {
 
     } catch (e) {
@@ -128,18 +140,18 @@ userRouter.post('/users/send-verification', async (req, res) => {
     res.send('Verification email resent');
 });
 
-userRouter.post('/users/update-profile-avatar', auth, async (req, res) => {
+userRouter.post('/user/update-profile-avatar', auth, async (req, res) => {
     // Profile update logic here (add multer middleware later if needed for file upload)
     res.send('User profile updated');
 });
 
-userRouter.patch('/users/update-info', auth, async (req, res) => {
+userRouter.patch('/user/update-info', auth, async (req, res) => {
     // Password update logic here
     res.send('User password updated');
 });
 
 
-userRouter.post('/users/logout', auth, async (req, res) => {
+userRouter.post('/user/logout', auth, async (req, res) => {
     try {
         // Find the sessionId of the current access token
         const currentToken = req.user.tokens.find(t => t.token === req.token);
@@ -160,7 +172,7 @@ userRouter.post('/users/logout', auth, async (req, res) => {
     }
 });
 
-userRouter.post('/users/logout-all', auth, async (req, res) => {
+userRouter.post('/user/logout-all', auth, async (req, res) => {
     try {
         // Remove all tokens and refresh tokens (logout from all devices)
         req.user.tokens = [];
@@ -173,7 +185,17 @@ userRouter.post('/users/logout-all', auth, async (req, res) => {
     }
 });
 
-userRouter.delete('/users/delete', auth, async (req, res) => {
-    // Account deletion logic here
-    res.send('User account deleted');
+userRouter.delete('/user/delete', auth, async (req, res) => {
+    try {
+        // Send goodbye email before deleting
+        await sendByebyeEmail(req.user.email, req.user.firstName);
+
+        // Delete the user
+        await req.user.deleteOne();
+
+        res.send({ message: 'User account deleted successfully' });
+    } catch (error) {
+        console.error('Account deletion error:', error);
+        res.status(500).send({ error: 'Failed to delete account' });
+    }
 });
