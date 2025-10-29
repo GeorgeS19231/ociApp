@@ -1,6 +1,7 @@
 import express from 'express';
 import './db/mongoose.js';
 import { userRouter } from './routes/user.js';
+import { jobRouter } from './routes/job.js';
 
 
 
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use(userRouter);
+app.use(jobRouter)
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);

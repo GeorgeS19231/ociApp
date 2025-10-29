@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { isAtLeast16 } from "../validators/age_validation.js";
 import { customAlphabet } from "nanoid";
 
-export const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
         required: true,
@@ -135,6 +135,12 @@ export const userSchema = new mongoose.Schema({
         },
     }
 });
+
+userSchema.virtual('jobs', {
+    ref: 'Job',
+    localField: '_id',
+    foreignField: 'author'
+})
 
 userSchema.methods.generateVerificationToken = async function () {
     // Generate random number of 5 characters based on given ones 

@@ -13,7 +13,7 @@ WhenSchema.path("endDate").validate(function (v) {
     return v >= this.startDate;
 }, "endDate must be >= startDate");
 
-export const jobSchema = new mongoose.Schema(
+const jobSchema = new mongoose.Schema(
     {
         title: {
             type: String,
@@ -64,7 +64,7 @@ export const jobSchema = new mongoose.Schema(
             index: true,
         },
         when: { type: WhenSchema, required: true },
-        // Optional: track assigned seats (update from your assignment flow)
+        // Optional: track assigned seats (update from each profile assignment flow)
         assignedCount: {
             type: Number,
             default: 0,
@@ -76,9 +76,15 @@ export const jobSchema = new mongoose.Schema(
                 message: "assignedCount must be integer and ≤ openedPositions",
             },
         },
+        author: {
+            type: mongoose.Schema.ObjectId,
+            required: true,
+            ref: 'User'
+        }
     },
     {
         timestamps: true,
+
     }
 );
 
@@ -94,12 +100,22 @@ jobSchema.pre("save", function (next) {
 });
 
 
+// Index for filtering by city and sorting by start date
 jobSchema.index({ city: 1, "when.startDate": 1 });
-jobSchema.index({ jobStatus: 1, "when.startDate": 1 });
-jobSchema.index({ title: "text", description: "text" }); // if you want text search
 
-// Optional partial unique to prevent multiple active duplicates of same title/time/city
+// Index for filtering by job status and sorting by start date
+jobSchema.index({ jobStatus: 1, "when.startDate": 1 });
+
+// Index for combining city + jobStatus filters with date sorting
+jobSchema.index({ city: 1, jobStatus: 1, "when.startDate": 1 });
+
+// Text index for full-text search on title and description
+jobSchema.index({ title: "text", description: "text" });
+
+// Partial unique index to prevent duplicate open jobs (same title, city, start date)
 jobSchema.index(
     { title: 1, city: 1, "when.startDate": 1 },
     { unique: true, partialFilterExpression: { jobStatus: "open" } }
 );
+
+export const Job = mongoose.model('Job', jobSchema);
