@@ -6,16 +6,6 @@ import { isAtLeast16 } from "../validators/age_validation.js";
 import { customAlphabet } from "nanoid";
 
 const userSchema = new mongoose.Schema({
-    firstName: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    lastName: {
-        type: String,
-        required: true,
-        trim: true
-    },
     email: {
         type: String,
         unique: true,
@@ -39,29 +29,7 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
-    dob: {
-        type: Date,
-        required: true,
-
-        validator(value) {
-            if (validator.isDate(value) && value >= new Date() && !isAtLeast16(dateOfBirth)) {
-                throw new Error('Date of birth must be in the past and be at least 16 years');
-            }
-        }
-    },
-    sex: {
-        type: String,
-        enum: ['male', 'female', 'other'],
-        required: true
-    },
-    profilePicture: {
-        type: String,
-    },
-
-    avatar: {
-        type: Buffer
-    },
-
+   
     tokens: [{
         token: {
             type: String,
@@ -128,7 +96,6 @@ const userSchema = new mongoose.Schema({
             delete ret.password;
             delete ret.tokens;
             delete ret.refreshTokens;
-            delete ret.avatar;
             delete ret.isVerified;
             delete ret.verificationToken;
             return ret;
