@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { isAtLeast16 } from "../validators/age_validation.js";
 import { customAlphabet } from "nanoid";
 
 const userSchema = new mongoose.Schema({
@@ -82,6 +81,7 @@ const userSchema = new mongoose.Schema({
         }
     }]
 }, {
+    strict: 'throw',
     timestamps: true,
     toJSON: {
         virtuals: true, transform: (doc, ret) => {

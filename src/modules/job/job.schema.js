@@ -69,7 +69,7 @@ const jobSchema = new mongoose.Schema(
         },
         jobType: {
             type: String,
-            enum: ["full-time", "part-time"],
+            enum: ['full-time', 'part-time'],
             required: true,
         },
         isRemote: {
@@ -83,8 +83,8 @@ const jobSchema = new mongoose.Schema(
         },
         jobStatus: {
             type: String,
-            enum: ["open", "filled", "closed"],
-            default: "open",
+            enum: ['open', 'filled', 'closed'],
+            default: 'open',
             index: true,
         },
         when: { type: WhenSchema, required: true },
@@ -95,7 +95,8 @@ const jobSchema = new mongoose.Schema(
             type: mongoose.Schema.ObjectId,
             required: true,
             ref: 'User'
-        }
+        },
+        assignments: [{ type: mongoose.Schema.ObjectId, ref: 'Assignment' }]
     },
     {
         timestamps: true,

@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 import { AvailabilitySchema } from './profile.schema.js';
 
 const ProfileSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        unique: true,
+        required: true
+    },
     name: {
         type: String,
         required: true,
@@ -74,12 +80,12 @@ const ProfileSchema = new mongoose.Schema({
 
     },
     availability: [AvailabilitySchema],
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        unique: true,
-        required: true
-    },
+    favoriteJobs: [
+        {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Job'
+        }
+    ]
 
 }, { timestamps: true });
 
