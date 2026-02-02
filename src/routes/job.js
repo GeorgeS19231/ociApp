@@ -1,5 +1,5 @@
 import express from 'express';
-import { Job } from '../models/job.js';
+import { Job } from '../modules/job/job.schema.js';
 import { auth } from '../middleware/auth.js';
 
 export const jobRouter = express.Router();
