@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { trim } from "validator";
 
 const WhenSchema = new mongoose.Schema(
     {
@@ -7,6 +8,23 @@ const WhenSchema = new mongoose.Schema(
     },
     { _id: false }
 );
+const salaryRangeSchema = new mongoose.Schema(
+    {
+        min: { type: Number, min: 0 },
+        max: {
+            type: Number, min: 0,
+            validate: {
+                validator(value) {
+                    return value < this.min
+                },
+                message: 'Max salary must be greater than min salary'
+            },
+        },
+
+        _id: false,
+        currency: { type: String, trim: true, uppercase: true, required: true }
+    }
+)
 
 WhenSchema.path("endDate").validate(function (v) {
     if (!v) return true;
@@ -28,6 +46,12 @@ const jobSchema = new mongoose.Schema(
             lowercase: true,
             minlength: 2,
         },
+        companyName: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 2,
+        },
         openedPositions: {
             type: Number,
             default: 1,
@@ -45,7 +69,7 @@ const jobSchema = new mongoose.Schema(
         },
         jobType: {
             type: String,
-            enum: ["full-time", "part-time"],
+            enum: ['full-time', 'part-time'],
             required: true,
         },
         isRemote: {
@@ -59,28 +83,20 @@ const jobSchema = new mongoose.Schema(
         },
         jobStatus: {
             type: String,
-            enum: ["open", "filled", "closed"],
-            default: "open",
+            enum: ['open', 'filled', 'closed'],
+            default: 'open',
             index: true,
         },
         when: { type: WhenSchema, required: true },
-        // Optional: track assigned seats (update from each profile assignment flow)
-        assignedCount: {
-            type: Number,
-            default: 0,
-            min: 0,
-            validate: {
-                validator(v) {
-                    return Number.isInteger(v) && v <= this.openedPositions;
-                },
-                message: "assignedCount must be integer and ≤ openedPositions",
-            },
-        },
+
+        salaryRange: { type: salaryRangeSchema, required: true },
+
         author: {
             type: mongoose.Schema.ObjectId,
             required: true,
             ref: 'User'
-        }
+        },
+        assignments: [{ type: mongoose.Schema.ObjectId, ref: 'Assignment' }]
     },
     {
         timestamps: true,

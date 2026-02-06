@@ -1,7 +1,13 @@
 import mongoose from 'mongoose';
-import { AvailabilitySchema } from './profile.js';
+import { AvailabilitySchema } from './profile.schema.js';
 
 const ProfileSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        unique: true,
+        required: true
+    },
     name: {
         type: String,
         required: true,
@@ -30,11 +36,13 @@ const ProfileSchema = new mongoose.Schema({
     dob: {
         type: Date,
         required: true,
+        validate: {
+            validator(value) {
+                if (!(value instanceof Date) || Number.isNaN(value.getTime()))
+                    return isAtLeast16(value);
 
-        validator(value) {
-            if (validator.isDate(value) && value >= new Date() && !isAtLeast16(dateOfBirth)) {
-                throw new Error('Date of birth must be in the past and be at least 16 years');
-            }
+            },
+            message: 'Date of birth must be in the past and at least 16 years old'
         }
     },
 
@@ -66,13 +74,18 @@ const ProfileSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    availability: [AvailabilitySchema],
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        unique: true,
-        required: true
+    isRecruiter: {
+        type: Boolean,
+        default: false,
+
     },
+    availability: [AvailabilitySchema],
+    favoriteJobs: [
+        {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Job'
+        }
+    ]
 
 }, { timestamps: true });
 

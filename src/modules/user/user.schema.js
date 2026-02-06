@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { isAtLeast16 } from "../validators/age_validation.js";
 import { customAlphabet } from "nanoid";
 
 const userSchema = new mongoose.Schema({
@@ -12,10 +11,11 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true,
         lowercase: true,
-        validate(value) {
-            if (!validator.isEmail(value)) {
-                throw new Error('Email is invalid');
-            }
+        validate: {
+            validator(value) {
+                return validator.isEmail(value);
+            },
+            message: 'Email is invalid'
         }
     },
     password: {
@@ -23,13 +23,14 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 7,
         trim: true,
-        validate(value) {
-            if (value.toLowerCase().includes('password')) {
-                throw new Error('Password cannot contain "password"');
-            }
+        validate: {
+            validator(value) {
+                return value.toLowerCase().includes('password');
+            },
+            message: 'Password cannot contain "password"'
         }
     },
-   
+
     tokens: [{
         token: {
             type: String,
@@ -80,6 +81,7 @@ const userSchema = new mongoose.Schema({
         }
     }]
 }, {
+    strict: 'throw',
     timestamps: true,
     toJSON: {
         virtuals: true, transform: (doc, ret) => {
