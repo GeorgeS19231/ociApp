@@ -7,7 +7,7 @@ const { controller } = assignmentModule;
 
 // Check if there's an existing assignment to a job from current user
 //
-assignmentRoute.get('/jobs/:jobId/assignments', auth, controller.checkExistingAssignment);
+assignmentRoute.get('/jobs/:jobId/assignment', auth, controller.checkExistingAssignment);
 
 // Create a new assigmnet for a job
 //
@@ -24,3 +24,7 @@ assignmentRoute.delete('/jobs/assignments/:assignmentId', auth, controller.remov
 // Change the status for a specific assignmnent
 //
 assignmentRoute.patch('/jobs/assignments/:assignmentId/status', auth, controller.changeExistingAssignmentStatus);
+
+// Get assginments list for a job
+//
+assignmentRoute.get('/jobs/:jobId/assignments', auth, controller.getAssignmentsList);

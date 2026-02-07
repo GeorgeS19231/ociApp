@@ -65,8 +65,18 @@ export default class AssignmentService {
         try {
 
             const userAssignment = await this.assignmentRepo.getAssignmentWithAuthor(assignmentId);
-        if (userAssignment === null || String(userAssignment.job.author) !== String(userId)) throw Error('There`s no assignment to be changed')
+            if (userAssignment === null || String(userAssignment.job.author) !== String(userId)) throw Error('There`s no assignment to be changed')
             return await this.assignmentRepo.changeAssignmentStatus(assignmentId, newStatus);
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async getAssignmentsList(userId, jobId, page, limit) {
+        try {
+            const skip = (page - 1) * limit;
+            return await this.assignmentRepo.getAssignmentListForJobAndAuthor(userId, jobId, skip, limit);
+
         } catch (err) {
             throw err;
         }

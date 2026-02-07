@@ -5,37 +5,52 @@ export default class AssignmentRepository {
     }
 
     // Check if there's already an assignmet from a user for a job
-    async checkIfAssignmentExistForJob(userId, jobId){
-        return await this.Assignment.findOne({user: userId, job: jobId});
+    //
+    async checkIfAssignmentExistForJob(userId, jobId) {
+        return await this.Assignment.findOne({ user: userId, job: jobId });
     }
 
     // Check the existence of a specific assignemnent
-    async checkIfAssignmentExist(userId, assignmentId){
-        return await this.Assignment.findOne({user: userId, _id: assignmentId});
+    //
+    async checkIfAssignmentExist(userId, assignmentId) {
+        return await this.Assignment.findOne({ user: userId, _id: assignmentId });
     }
 
 
     // To create a new assignment
+    //
     async createAssignment(assignment) {
         return await this.Assignment.create(assignment);
     }
 
-    async getAssignmentWithAuthor(assignmentId){
-        return await this.Assignment.findById(assignmentId).populate('job', 'author').lean();
+    async getAssignmentWithAuthor(assignmentId) {
+        return await this.Assignment.findById(assignmentId).populate('job', 'author').populate('cv').lean();
+    }
+
+    // Get all assignments for a CV with job author populated
+    //
+    async getAssignmentsByCvWithJobAuthor(cvId) {
+        return await this.Assignment
+            .find({ cv: cvId })
+            .populate('job', 'author')
+            .lean();
     }
 
     // To remove all assignments of a job after that one was deleted
+    //
     async removeAssignments(jobId) {
         return await this.Assignment.deleteMany({ job: jobId });
     }
 
     // Remove an assignmet for a job
+    //
     async removeAssignment(assignmentId) {
         return await this.Assignment.deleteOne({ _id: assignmentId });
     }
 
 
     // Update the status for an assignment
+    //
     async changeAssignmentStatus(assignmentId, status) {
         return await this.Assignment.findOneAndUpdate(
             { _id: assignmentId },
@@ -43,5 +58,15 @@ export default class AssignmentRepository {
             { new: true, runValidators: true }
         ).lean();
     }
+
+    // Get list of assignments for a specific job and author
+    //
+    async getAssignmentListForJobAndAuthor(userId, jobId, skip, limit) {
+        return await this.Assignment
+            .find({ user: userId, job: jobId })
+            .skip(skip)
+            .limit(limit);
+    }
+
 
 }

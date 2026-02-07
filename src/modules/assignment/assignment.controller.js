@@ -91,4 +91,25 @@ export default class AssignmentController {
             return next(err);
         }
     }
+    getAssignmentsList = async (req, res, next) => {
+        try {
+            const { page, limit } = req.query;
+            if (!page || !limit) {
+                return res.status(400).json({
+                    error: 'MISSING_PAGE_OR_LIMIT',
+                    message: 'Page and limit are required'
+                });
+            }
+            const jobId = req.params;
+            if (!job) {
+                return res.status(400).json({
+                    error: 'MISSING_JOB_ID',
+                    message: 'jobId is required',
+                });
+            }
+            return await this.assignmentService.getAssignmentsList(req.user._id, jobId, page, limit);
+        } catch (err) {
+            return next(err);
+        }
+    }
 }

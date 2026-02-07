@@ -76,6 +76,6 @@ const cvSchema = new mongoose.Schema({
         minlength: 2,
         maxlength: 25,
     }]
-});
+}, { timestamp: true });
 
 export const CvSchema = mongoose.model('CV', cvSchema);
