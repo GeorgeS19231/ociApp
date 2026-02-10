@@ -19,7 +19,7 @@ export default class CvRepository {
     // Update an existing cv for current user
     //
     async updateCv(cvId, cvData) {
-        return await this.cvModel.findOneAndReplace(
+        return await this.cvModel.findByIdAndUpdate(
             { _id: cvId },
             cvData,
             { new: true, runValidators: true }
@@ -28,7 +28,7 @@ export default class CvRepository {
 
     // Remove a cv for current user
     //
-    async removeCV(cvId) {
-        return await this.cvModel.findOneAndDelete({ _id: cvId });
+    async removeCV(cvId, userId) {
+        return await this.cvModel.findOneAndDelete({ _id: cvId, user: userId });
     }
 }

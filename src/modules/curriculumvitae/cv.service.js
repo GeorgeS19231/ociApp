@@ -15,6 +15,7 @@ export default class CvService {
     }
 
     // Get a cv
+    //
     async getCv(userId, cvId) {
         try {
             const requestedCv = await this.cvRepo.getCv(cvId);
@@ -34,4 +35,30 @@ export default class CvService {
             throw Error(err);
         }
     }
+
+    // Update existing cv
+    //
+    async updateCv(userId, cvId, data) {
+        try {
+            const userCv = this.cvRepo.getCv(cvId);
+            if (!userCv) throw Error('There is not cv to be updated');
+            if (userId !== userCv.user._id) throw Error('Unauthorized operation');
+            return await this.cvRepo.updateCv(cvId, data);
+
+        } catch (err) {
+            throw Error(err);
+        }
+    }
+
+    // Remove existing cv
+    //
+    async removeCv(userId, cvId) {
+        try {
+            return await this.cvRepo.removeCv(cvId, userId);
+
+        } catch (err) {
+            throw Error(err);
+        }
+    }
+
 }

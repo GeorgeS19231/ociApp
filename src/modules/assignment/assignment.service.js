@@ -1,6 +1,7 @@
 export default class AssignmentService {
-    constructor(assignmentRepo) {
+    constructor(assignmentRepo, jobRepo) {
         this.assignmentRepo = assignmentRepo;
+        this.jobRepo = jobRepo;
     }
 
     async checkExistingAssignment(userId, jobId) {
@@ -40,10 +41,11 @@ export default class AssignmentService {
     }
 
     // When a job is filled or removed, we have to remove its assignments 
-    async removeJobAssignemnts(userProfile, job) {
+    async removeJobAssignemnts(userId, jobId) {
         try {
-            // TODO: check if user is recruiter or not, then identify the job that was deleted
-            // then delete the assignments related to that job id
+            const authorizedTransaction = this.jobRepo.checkJobOwnership(jobId, userId);
+            if (!authorizedTransaction) throw Error('The assignment deletion was not authorized.');
+            return await this.assignmentRepo.removeJobAssignemnts;
 
         } catch (err) {
             throw err;
