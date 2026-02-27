@@ -1,14 +1,12 @@
 // Here I'll encapsulate all the db operations related with the job posts
 
-import { Job } from './job.schema.js';
-
 export default class JobRepository {
     constructor(JobModel) {
         this.Job = JobModel;
     }
 
     async createJob(jobData) {
-        const job = new Job(jobData);
+        const job = new this.Job(jobData);
         return await job.save();
     }
 

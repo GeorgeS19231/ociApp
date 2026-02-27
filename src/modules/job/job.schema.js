@@ -15,7 +15,7 @@ const salaryRangeSchema = new mongoose.Schema(
             type: Number, min: 0,
             validate: {
                 validator(value) {
-                    return value < this.min
+                    return value >= this.min
                 },
                 message: 'Max salary must be greater than min salary'
             },
@@ -106,9 +106,6 @@ const jobSchema = new mongoose.Schema(
 
 // Auto-fill/close helpers 
 jobSchema.pre("save", function (next) {
-    if (this.assignedCount >= this.openedPositions && this.jobStatus === "open") {
-        this.jobStatus = "filled";
-    }
     if (this.when?.endDate && this.when.endDate < new Date() && this.jobStatus === "open") {
         this.jobStatus = "closed";
     }
