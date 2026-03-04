@@ -1,4 +1,3 @@
-// Here I'll encapsulate all the database operations related to user profiles
 export default class ProfileRepository {
     constructor(ProfileModel, UserModel) {
         this.ProfileModel = ProfileModel;

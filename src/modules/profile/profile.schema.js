@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { AvailabilitySchema } from './profile.schema.js';
+import { AvailabilitySchema } from '../user/user.schema.js';
 
 const ProfileSchema = new mongoose.Schema({
     user: {

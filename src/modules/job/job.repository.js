@@ -6,7 +6,7 @@ export default class JobRepository {
     }
 
     async createJob(jobData) {
-        const job = new this.Job(jobData);
+        const job = new this.Job.create(jobData);
         return await job.save();
     }
 
