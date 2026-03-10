@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { AvailabilitySchema } from '../user/user.schema.js';
+import { AvailabilitySchema } from '../../models/availability.js';
+import { isAtLeast16 } from '../../validators/age_validation.js';
 
 const ProfileSchema = new mongoose.Schema({
     user: {
@@ -38,9 +39,10 @@ const ProfileSchema = new mongoose.Schema({
         required: true,
         validate: {
             validator(value) {
-                if (!(value instanceof Date) || Number.isNaN(value.getTime()))
-                    return isAtLeast16(value);
-
+                if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+                    return false;
+                }
+                return isAtLeast16(value);
             },
             message: 'Date of birth must be in the past and at least 16 years old'
         }

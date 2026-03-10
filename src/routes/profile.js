@@ -3,16 +3,16 @@ import profileModule from "../modules/profile/profile.module.js";
 import { auth } from "../middleware/auth.js";
 
 export const profileRoute = express.Router();
-const { controller } = profileModule;
+const { profileController } = profileModule;
 
 // Get current user profile information
 //
-profileRoute.get('/me', auth, controller.getUserPorfileInfo);
+profileRoute.get('/me', auth, profileController.getUserProfileInfo);
 
 // Delete current user profile information
 //
-profileRoute.delete('/me', auth, controller.deleteProfileInfo);
+profileRoute.delete('/me', auth, profileController.deleteProfileInfo);
 
 // Update current user profile information
 //
-profileRoute.patch('/me', auth, controller.updateProfileInfo);
+profileRoute.patch('/me', auth, profileController.updateProfileInfo);

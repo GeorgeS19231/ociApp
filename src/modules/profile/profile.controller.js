@@ -1,25 +1,26 @@
 export default class ProfileController {
-    constructor(ProfileService) {
-        this.ProfileService = ProfileService;
+    constructor(profileService) {
+        this.profileService = profileService;
     }
 
-    getUserPorfileInfo = async (req, res, next) => {
+    getUserProfileInfo = async (req, res, next) => {
         try {
-
-            return await this.ProfileService.getUserPorfileInfo(req.user._id);
+            const profile = await this.profileService.getUserProfileInfo(req.user._id);
+            return res.json({ profile });
 
         } catch (err) {
             return next(err);
         }
-    }
+    };
 
     deleteProfileInfo = async (req, res, next) => {
         try {
-            return await this.ProfileService.deleteProfileInfo(req.user._id);
+            const result = await this.profileService.deleteProfileInfo(req.user._id);
+            return res.json({ result });
         } catch (err) {
             return next(err);
         }
-    }
+    };
 
     updateProfileInfo = async (req, res, next) => {
         try {
@@ -30,10 +31,11 @@ export default class ProfileController {
                     code: 'PROFILE_UPDATE_FAIL_MISSING_BODY'
                 });
             }
-            return await this.ProfileService.updateProfileInfo(req.user._id, body);
+            const profile = await this.profileService.updateProfileInfo(req.user._id, body);
+            return res.json({ profile });
 
         } catch (err) {
             return next(err);
         }
-    }
+    };
 }

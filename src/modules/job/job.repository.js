@@ -6,7 +6,7 @@ export default class JobRepository {
     }
 
     async createJob(jobData) {
-        const job = new this.Job.create(jobData);
+        const job = new this.Job(jobData);
         return await job.save();
     }
 
@@ -23,10 +23,10 @@ export default class JobRepository {
     }
     async getJobList(filter, skip, limit, sort) {
         return await this.Job.find(filter, '_id title city salaryRange when')
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .lean();
-}
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+            .lean();
+    }
 
 }

@@ -8,8 +8,6 @@ export default class ProfileService {
         try {
             const userProfile = await this.ProfileRepository.getUserProfile(userId);
             if (!userProfile) { throw Error('NOT_FOUND'); }
-            if (currentUser != String(userProfile.user)) { throw Error('Unauthorized operations'); }
-
             return userProfile;
         } catch (err) {
             throw Error(err);

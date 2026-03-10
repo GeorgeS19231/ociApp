@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
         trim: true,
         validate: {
             validator(value) {
-                return value.toLowerCase().includes('password');
+                return !value.toLowerCase().includes('password');
             },
             message: 'Password cannot contain "password"'
         }
