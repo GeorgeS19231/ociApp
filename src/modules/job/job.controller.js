@@ -1,10 +1,8 @@
-// Here I'll write a thin adapter between http layer and service layer
-import { JobService } from './job.service.js';
-
 export default class JobController {
-    constructor(JobService) {
-        this.JobService = JobService;
+    constructor(jobService) {
+        this.jobService = jobService;
     }
+
     createJob = async (req, res, next) => {
         try {
             const data = req.body;
@@ -14,28 +12,35 @@ export default class JobController {
                     code: 'JOB_FAIL_MISSING_BODY'
                 });
             }
-            return await this.JobService.createJob(data);
+
+            const job = await this.jobService.createJob({
+                ...data,
+                author: req.user._id
+            });
+            return res.status(201).json({ job });
 
         } catch (err) {
             return next(err);
         }
-    }
+    };
 
     deleteJob = async (req, res, next) => {
         try {
-            const jobId = req.params;
+            const { jobId } = req.params;
             if (!jobId) {
                 return res.status(400).json({
                     error: 'job id is required',
                     code: 'NO_ID_FOUND'
                 });
             }
-            return await this.JobService.deleteJob(jobId, req.user._id);
+
+            const result = await this.jobService.deleteJob(jobId, req.user._id);
+            return res.json({ result });
 
         } catch (err) {
             return next(err);
         }
-    }
+    };
 
     getJobList = async (req, res, next) => {
         try {
@@ -43,10 +48,11 @@ export default class JobController {
             const skip = parseInt(req.query.skip) || 0;
             const limit = parseInt(req.query.limit) || 10;
             const sort = req.query.sort || { createdAt: -1 };
-            return await this.JobService.getJobList(filter, skip, limit, sort);
+            const jobs = await this.jobService.getJobList(filter, skip, limit, sort);
+            return res.json({ jobs });
 
         } catch (err) {
             return next(err);
         }
-    }
+    };
 }

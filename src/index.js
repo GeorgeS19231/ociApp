@@ -7,6 +7,7 @@ import xss from 'xss-clean';
 import hpp from 'hpp';
 import { userRouter } from './routes/user.js';
 import { jobRouter } from './routes/job.js';
+import { profileRoute } from './routes/profile.js';
 
 
 
@@ -28,19 +29,17 @@ app.use(hpp());
 
 const port = process.env.PORT || 3000;
 
-// Middleware to parse JSON requests
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
 
 
 app.use(userRouter);
-app.use(jobRouter)
+app.use(jobRouter);
+app.use(profileRoute);
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
-
 
 

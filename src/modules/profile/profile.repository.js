@@ -15,7 +15,7 @@ export default class ProfileRepository {
         if (!deletedProfile) {
             throw new Error("Profile deletion failed");
         }
-        const deletedUser = await this.UserModel.findOneAndDelet({ _id: userId });
+        const deletedUser = await this.UserModel.findOneAndDelete({ _id: userId });
         return { deletedProfile, deletedUser };
     }
 
