@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { AppError } from '../../utils/app_error.js';
 
 export default class UserService {
     constructor(userRepository, profileRepository, mailer) {
@@ -37,9 +38,7 @@ export default class UserService {
         const user = await this.userRepository.findByCredentials(email, password);
 
         if (!user.isVerified) {
-            const error = new Error('Please verify your email before logging in.');
-            error.status = 403;
-            throw error;
+            throw new AppError(403, 'Please verify your email before logging in.');
         }
 
         const { accessToken, refreshToken } = await user.generateAuthTokens();
@@ -48,9 +47,7 @@ export default class UserService {
 
     async refreshAuthToken(refreshToken) {
         if (!refreshToken) {
-            const error = new Error('Refresh token required');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Refresh token required');
         }
 
         const decoded = jwt.verify(
@@ -64,9 +61,7 @@ export default class UserService {
 
         const user = await this.userRepository.findByIdAndRefreshToken(decoded._id, refreshToken);
         if (!user) {
-            const error = new Error('Invalid refresh token');
-            error.status = 401;
-            throw error;
+            throw new AppError(401, 'Invalid refresh token');
         }
 
         await user.cleanupExpiredTokens();
@@ -78,9 +73,7 @@ export default class UserService {
                 await this.userRepository.save(user);
             }
 
-            const error = new Error('Refresh token expired');
-            error.status = 401;
-            throw error;
+            throw new AppError(401, 'Refresh token expired');
         }
 
         const { sessionId } = decoded;
@@ -97,16 +90,12 @@ export default class UserService {
         const updateKeys = Object.keys(updates || {});
 
         if (!updateKeys.length) {
-            const error = new Error('Update body is required');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Update body is required');
         }
 
         const invalidField = updateKeys.find((key) => !allowedUpdates.includes(key));
         if (invalidField) {
-            const error = new Error(`Invalid update field: ${invalidField}`);
-            error.status = 400;
-            throw error;
+            throw new AppError(400, `Invalid update field: ${invalidField}`);
         }
 
         for (const key of updateKeys) {
@@ -142,9 +131,7 @@ export default class UserService {
 
     async forgotPassword(email) {
         if (!email) {
-            const error = new Error('Email is required');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Email is required');
         }
 
         const user = await this.userRepository.findByEmail(email);
@@ -159,25 +146,19 @@ export default class UserService {
 
     async resetPassword(email, resetCode, newPassword) {
         if (!email || !resetCode || !newPassword) {
-            const error = new Error('Email, reset code and new password are required');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Email, reset code and new password are required');
         }
 
         const user = await this.userRepository.findByEmail(email);
         if (!user || !user.passwordResetToken.length) {
-            const error = new Error('Invalid or expired reset code');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Invalid or expired reset code');
         }
 
         const storedToken = user.passwordResetToken[0];
         if (storedToken.expiresAt < new Date()) {
             user.passwordResetToken = [];
             await this.userRepository.save(user);
-            const error = new Error('Invalid or expired reset code');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Invalid or expired reset code');
         }
 
         const isMatch = await bcrypt.compare(
@@ -191,9 +172,7 @@ export default class UserService {
                 user.passwordResetToken = [];
             }
             await this.userRepository.save(user);
-            const error = new Error('Invalid or expired reset code');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Invalid or expired reset code');
         }
 
         user.password = newPassword;
@@ -204,16 +183,12 @@ export default class UserService {
 
     async sendVerification(email) {
         if (!email) {
-            const error = new Error('Email is required');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'Email is required');
         }
 
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
-            const error = new Error('User not found');
-            error.status = 404;
-            throw error;
+            throw new AppError(404, 'User not found');
         }
 
         if (user.isVerified) {
@@ -227,16 +202,12 @@ export default class UserService {
 
     async updateProfileAvatar(userId, avatarUrl) {
         if (!avatarUrl) {
-            const error = new Error('avatarUrl is required');
-            error.status = 400;
-            throw error;
+            throw new AppError(400, 'avatarUrl is required');
         }
 
         const profile = await this.profileRepository.updateAvatar(userId, avatarUrl);
         if (!profile) {
-            const error = new Error('Profile not found');
-            error.status = 404;
-            throw error;
+            throw new AppError(404, 'Profile not found');
         }
 
         return profile;

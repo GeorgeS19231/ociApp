@@ -1,3 +1,5 @@
+import { AppError } from '../../utils/app_error.js';
+
 export default class ProfileService {
     constructor(ProfileRepository) {
         this.ProfileRepository = ProfileRepository;
@@ -7,10 +9,13 @@ export default class ProfileService {
     async getUserProfileInfo(userId) {
         try {
             const userProfile = await this.ProfileRepository.getUserProfile(userId);
-            if (!userProfile) { throw Error('NOT_FOUND'); }
+            if (!userProfile) {
+                throw new AppError(404, 'User profile not found');
+            }
+
             return userProfile;
         } catch (err) {
-            throw Error(err);
+            throw err;
         }
     }
 
@@ -19,15 +24,17 @@ export default class ProfileService {
         try {
             const profileInfo = await this.ProfileRepository.getUserProfile(userId);
             if (!profileInfo) {
-                throw Error('NOT_FOUND');
+                throw new AppError(404, 'User profile not found');
             }
-            if (userId != profileInfo.user) {
-                throw Error('Unauthorized operations');
+
+            if (String(userId) !== String(profileInfo.user)) {
+                throw new AppError(403, 'Unauthorized operations');
             }
+
             return await this.ProfileRepository.deleteProfileInfo(userId);
 
         } catch (err) {
-            throw Error(err);
+            throw err;
         }
     }
 
@@ -36,15 +43,17 @@ export default class ProfileService {
         try {
             const profileInfo = await this.ProfileRepository.getUserProfile(userId);
             if (!profileInfo) {
-                throw Error('NOT_FOUND');
+                throw new AppError(404, 'User profile not found');
             }
-            if (userId != profileInfo.user) {
-                throw Error('Unauthorized operations');
+
+            if (String(userId) !== String(profileInfo.user)) {
+                throw new AppError(403, 'Unauthorized operations');
             }
+
             return await this.ProfileRepository.updateProfileInfo(userId, updates);
 
         } catch (err) {
-            throw Error(err);
+            throw err;
         }
     }
 }

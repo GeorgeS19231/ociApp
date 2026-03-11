@@ -6,9 +6,10 @@ export default class ProfileController {
     getUserProfileInfo = async (req, res, next) => {
         try {
             const profile = await this.profileService.getUserProfileInfo(req.user._id);
-            return res.json({ profile });
+            return res.status(200).json({ profile });
 
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     };
@@ -16,8 +17,9 @@ export default class ProfileController {
     deleteProfileInfo = async (req, res, next) => {
         try {
             const result = await this.profileService.deleteProfileInfo(req.user._id);
-            return res.json({ result });
+            return res.status(200).json({ result });
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     };
@@ -32,9 +34,10 @@ export default class ProfileController {
                 });
             }
             const profile = await this.profileService.updateProfileInfo(req.user._id, body);
-            return res.json({ profile });
+            return res.status(200).json({ profile });
 
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     };

@@ -1,13 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.js';
+import { AppError } from '../utils/app_error.js';
 
 
 export const auth = async (req, res, next) => {
   try {
     if (!req.header('Authorization')) {
-      const error = new Error('Please authenticate.');
-      error.status = 401;
-      throw error;
+      throw new AppError(401, 'Please authenticate.');
     }
     const token = req.header('Authorization').replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
@@ -19,18 +18,14 @@ export const auth = async (req, res, next) => {
 
     if (user) {
       if (user.verificationToken && !user.isVerified) {
-        const error = new Error('Please verify your email before logging in.');
-        error.status = 403;
-        throw error;
+        throw new AppError(403, 'Please verify your email before logging in.');
       }
       req.user = user;
       req.token = token;
       req.sessionId = decoded.sessionId;  // Include sessionId in request for potential use
       next();
     } else {
-      const error = new Error('Invalid token');
-      error.status = 401;
-      throw error;
+      throw new AppError(401, 'Invalid token');
     }
   } catch (error) {
     // If token is expired or invalid, try to clean it up from database
@@ -57,8 +52,7 @@ export const auth = async (req, res, next) => {
     }
 
     if (!error.status) {
-      error.status = 401;
-      error.message = 'Please authenticate.';
+      return next(new AppError(401, 'Please authenticate.'));
     }
 
     return next(error);

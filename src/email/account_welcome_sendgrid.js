@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { AppError } from '../utils/app_error.js';
 
 let sendgridConfigured = false;
 
@@ -21,15 +22,11 @@ function ensureMailerConfigured() {
 
     const apiKey = process.env.SENDGRID_KEY;
     if (!apiKey) {
-        const error = new Error('Email service is not configured. Set SENDGRID_KEY to enable email delivery.');
-        error.status = 503;
-        throw error;
+        throw new AppError(503, 'Email service is not configured. Set SENDGRID_KEY to enable email delivery.');
     }
 
     if (!apiKey.startsWith('SG.')) {
-        const error = new Error('SENDGRID_KEY is invalid.');
-        error.status = 503;
-        throw error;
+        throw new AppError(503, 'SENDGRID_KEY is invalid.');
     }
 
     sgMail.setApiKey(apiKey);

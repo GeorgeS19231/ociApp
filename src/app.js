@@ -7,6 +7,8 @@ import hpp from 'hpp';
 import { userRouter } from './routes/user.js';
 import { jobRouter } from './routes/job.js';
 import { profileRoute } from './routes/profile.js';
+import { assignmentRoute } from './routes/assignment.js';
+import { cvRoute } from './routes/cv.js';
 
 export function createApp() {
   const app = express();
@@ -28,6 +30,8 @@ export function createApp() {
   app.use(userRouter);
   app.use(jobRouter);
   app.use(profileRoute);
+  app.use(assignmentRoute);
+  app.use(cvRoute);
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'Route not found' });
