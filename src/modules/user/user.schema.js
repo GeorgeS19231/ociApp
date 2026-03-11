@@ -79,6 +79,21 @@ const userSchema = new mongoose.Schema({
             type: Number,
             default: 0
         }
+    }],
+
+    passwordResetToken: [{
+        token: {
+            type: String,
+            required: true
+        },
+        expiresAt: {
+            type: Date,
+            required: true
+        },
+        failedAttempts: {
+            type: Number,
+            default: 0
+        }
     }]
 }, {
     strict: 'throw',
@@ -90,6 +105,7 @@ const userSchema = new mongoose.Schema({
             delete ret.refreshTokens;
             delete ret.isVerified;
             delete ret.verificationToken;
+            delete ret.passwordResetToken;
             return ret;
         }
     },
@@ -100,6 +116,7 @@ const userSchema = new mongoose.Schema({
             delete ret.refreshTokens;
             delete ret.isVerified;
             delete ret.verificationToken;
+            delete ret.passwordResetToken;
             return ret;
         },
     }
@@ -124,7 +141,20 @@ userSchema.methods.generateVerificationToken = async function () {
     await this.save();
     return { randomVerificationCode };
 
-}
+};
+
+userSchema.methods.generatePasswordResetToken = async function () {
+    const nanoid = customAlphabet('1234567890', 6);
+    const resetCode = nanoid();
+    const encryptedCode = await bcrypt.hash(`${this._id}:${resetCode}:${process.env.OTP_PEPPER}`, 8);
+    this.passwordResetToken = [{
+        token: encryptedCode,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        failedAttempts: 0
+    }];
+    await this.save();
+    return { resetCode };
+};
 
 // Generate both access and refresh tokens
 userSchema.methods.generateAuthTokens = async function () {

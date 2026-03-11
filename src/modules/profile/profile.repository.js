@@ -24,4 +24,12 @@ export default class ProfileRepository {
         return await this.ProfileModel.findOneAndUpdate({ user: userId }, { $set: updated }, { new: true, runValidators: true });
     }
 
+    async updateAvatar(userId, avatarUrl) {
+        return await this.ProfileModel.findOneAndUpdate(
+            { user: userId },
+            { $set: { avatarUrl } },
+            { new: true, runValidators: true }
+        );
+    }
+
 }

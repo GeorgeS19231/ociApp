@@ -28,7 +28,7 @@ export default class CvRepository {
 
     // Remove a cv for current user
     //
-    async removeCV(cvId, userId) {
+    async removeCv(cvId, userId) {
         return await this.cvModel.findOneAndDelete({ _id: cvId, user: userId });
     }
 }

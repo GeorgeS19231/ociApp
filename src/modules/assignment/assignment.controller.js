@@ -15,8 +15,9 @@ export default class AssignmentController {
 
             const userId = req.user._id;
             const assignmentExists = await this.assignmentService.checkExistingAssignment(userId, jobId)
-            return res.json({ assignmentExists });
+            return res.status(200).json({ assignmentExists });
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     }
@@ -30,9 +31,10 @@ export default class AssignmentController {
                 });
             }
             const resultedAssignment = await this.assignmentService.createAssignment({ ...req.body, user: req.user._id, job: jobId });
-            return res.json({ resultedAssignment });
+            return res.status(201).json({ resultedAssignment });
 
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     }
@@ -46,10 +48,11 @@ export default class AssignmentController {
                 });
             }
             const assignment = await this.assignmentService.getAssignment(req.user._id, assignmentId);
-            return res.json({ assignment })
+            return res.status(200).json({ assignment });
 
 
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     }
@@ -62,8 +65,9 @@ export default class AssignmentController {
                 });
             }
             const result = await this.assignmentService.removeAssignment(req.user._id, req.params.assignmentId)
-            return res.json({ result });
+            return res.status(200).json({ result });
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     }
@@ -84,31 +88,35 @@ export default class AssignmentController {
                 });
             }
             const updatedEntity = await this.assignmentService.changeAssignmentStatus(req.user._id, assignmentId, newStatus);
-            return res.json({ updatedEntity });
+            return res.status(200).json({ updatedEntity });
 
 
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     }
     getAssignmentsList = async (req, res, next) => {
         try {
-            const { page, limit } = req.query;
+            const page = Number(req.query.page);
+            const limit = Number(req.query.limit);
             if (!page || !limit) {
                 return res.status(400).json({
                     error: 'MISSING_PAGE_OR_LIMIT',
                     message: 'Page and limit are required'
                 });
             }
-            const jobId = req.params;
-            if (!job) {
+            const { jobId } = req.params;
+            if (!jobId) {
                 return res.status(400).json({
                     error: 'MISSING_JOB_ID',
                     message: 'jobId is required',
                 });
             }
-            return await this.assignmentService.getAssignmentsList(req.user._id, jobId, page, limit);
+            const assignments = await this.assignmentService.getAssignmentsList(req.user._id, jobId, page, limit);
+            return res.status(200).json({ assignments });
         } catch (err) {
+            err.status ??= 400;
             return next(err);
         }
     }
